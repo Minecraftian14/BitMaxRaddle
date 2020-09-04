@@ -1,5 +1,7 @@
 package org.that.gui;
 
+import main.generalLogger.LOGGER;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -108,22 +110,32 @@ public class DrawingPane extends JPanel {
         setImage(image);
     }
 
-    private void boolize() {
-        if (drawBoolOnly) {
-            for (int i = 0; i < image.getWidth(); i++) {
-                for (int j = 0; j < image.getHeight(); j++) {
-                    Color c = new Color(image.getRGB(i, j));
-                    if (c.equals(ol_one)) image.setRGB(i, j, one.getRGB());
-                    else if (c.equals(ol_zero)) image.setRGB(i, j, zero.getRGB());
-                    else {
+    private void mappedBoolize() {
 
-                        System.out.println(c + " " + ol_one);
-                    }
-
+        for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getHeight(); j++) {
+                Color c = new Color(image.getRGB(i, j));
+                if (c.equals(ol_one)) image.setRGB(i, j, one.getRGB());
+                else if (c.equals(ol_zero)) image.setRGB(i, j, zero.getRGB());
+                else {
+                    LOGGER.error(c + " " + ol_one);
+                    LOGGER.isAudioAllowed = false;
                 }
+
             }
-            ol_one = one;
-            ol_zero = zero;
+        }
+        ol_one = one;
+        ol_zero = zero;
+
+    }
+
+    public void comparableBoolize() {
+        for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getHeight(); j++) {
+                Color c = new Color(image.getRGB(i, j));
+                c = (c.getRed()+c.getBlue()+c.getGreen())> 382 ? one:zero;
+                image.setRGB(i, j, c.getRGB());
+            }
         }
     }
 
@@ -137,7 +149,7 @@ public class DrawingPane extends JPanel {
             view_width = (int) (image.getWidth() * getHeight() / zoom / image.getHeight());
             view_height = (int) (getHeight() / zoom);
         }
-        if (drawBoolOnly) boolize();
+        if (drawBoolOnly) mappedBoolize();
 //        g.drawImage(image, (getWidth() - view_width) / 2 - root_x, (getHeight() - view_height) / 2 - root_y, view_width, view_height, null);
 //        g.drawImage(overlay, (getWidth() - view_width) / 2, (getHeight() - view_height) / 2, view_width, view_height, null);
         g.drawImage(image, root_x, root_y, view_width, view_height, null);
@@ -148,6 +160,7 @@ public class DrawingPane extends JPanel {
         image = _image;
         ol_one = Color.WHITE;
         ol_zero = Color.BLACK;
+        comparableBoolize();
         resetOverlay();
     }
 
@@ -173,11 +186,11 @@ public class DrawingPane extends JPanel {
         Color o = getOne();
         Color z = getZero();
         setColorTheme(Color.WHITE, Color.BLACK);
-        boolize();
+        mappedBoolize();
         BufferedImage im = new BufferedImage(image.getWidth(), image.getHeight(), 2);
         im.createGraphics().drawImage(image, 0, 0, null);
         setColorTheme(o, z);
-        boolize();
+        mappedBoolize();
         return im;
     }
 
@@ -221,7 +234,6 @@ public class DrawingPane extends JPanel {
 
     public void setRoot_x(int root_x) {
         this.root_x = root_x;
-        System.out.println(root_x);
         repaint();
     }
 
